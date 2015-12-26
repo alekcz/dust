@@ -34,17 +34,16 @@
 
 
 (defn showdoc [ns function]
-  (let [name (str (if (not= ns "pixie.stdlib") (str ns "/") (str ns "/")))]
+  (let [name (str (if (= function "/") (str  ns) (str ns "/")))]
   ;loads other possible namespaces in case function is in other namespace
     (if (= @show-all true) (eval   (read-string (str "(require " ns ")"))))
       
-    (let [data (meta (eval (read-string (str name function))))]
-      (print (str "\n  " name function "\n\n\t"))
-      (let [func-name (if (not= (str/index-of function "/") nil) (str function) (str name function))]
-        (loop [sigs (lazy-seq (:signatures data))]
-          (when (not= sigs '()) 
-            (print (str/replace (str (lazy-seq (first sigs)) "  ") "(" (str "(" func-name " ")))
-            (recur (rest sigs)))))
+    (let [data (meta (eval (read-string (str name function)))) func-name (if (and (not= (str/index-of function "/") nil) (not= (str function) "/")) (str function) (str name function))]
+      (print (str "\n  " func-name "\n\n\t"))
+      (loop [sigs (lazy-seq (:signatures data))]
+        (when (not= sigs '()) 
+          (print (str/replace (str (lazy-seq (first sigs)) "  ") "(" (str "(" func-name " ")))
+          (recur (rest sigs))))
 
       (if (nil? data)
         (do 
@@ -69,15 +68,30 @@
 
 (defcmd doc
   "Show function documentation. Broaden search using -all"
-  [function-name & search-all]
-  (if (= (str (first search-all)) "-all") (reset! show-all true))
-  (loop [_ 0]
-    (when (not= @namespaces '()) 
-      (try (showdoc (str (first @namespaces)) (str function-name))
-        (catch e
-         nil)) 
-         (recur (reset! namespaces (rest @namespaces)))))
-  (if (= @unknown-command true) (println (str "\n  " function-name "\n\n\t Function not found. " (if (not= (str (first search-all)) "-all") (str "Broaden search using -all flag.\n") (str "\n"))))))
+ [ & args]
+   (if (empty? args)
+    (help-cmd "doc")
+    (let [function-name (first args) search-all (first (rest args))]
+      (if (and (not= (str/index-of (str function-name) "/") nil) (not= (str function-name) "/") )
+          ;test for division operator as function to be documented
+          (do
+            (try 
+              (eval (read-string (str "(require " (str/substring function-name 0 (str/index-of function-name "/")) ")")))
+              ;load the required namespaces
+
+              (showdoc (str (first @namespaces)) (str function-name))
+              (catch e
+               (reset! unknown-command true)))
+              (reset! namespaces '())))
+      (if (= (str search-all) "-all") (reset! show-all true))
+      (loop [_ 0]
+        (when (not= @namespaces '()) 
+          (try (showdoc (str (first @namespaces)) (if (= function-name "deps") (str "*") (str function-name)))
+            ; $ dust doc * -> dust doc deps ???
+            (catch e
+             nil)) 
+             (recur (reset! namespaces (rest @namespaces)))))
+      (if (= @unknown-command true) (println (str "\n  " function-name "\n\n\t Function not found. " (if (not= (str search-all) "-all") (str "Broaden search using -all flag.\n") (str "\n"))))))))
 
 (defcmd deps
   "List the dependencies and their versions of the current project."
