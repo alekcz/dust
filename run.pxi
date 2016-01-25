@@ -66,7 +66,7 @@
 
 
 
-(defcmd doc
+(defcmd ^:no-project doc
   "Show function documentation. Broaden search using -all"
  [ & args]
    (if (empty? args)
