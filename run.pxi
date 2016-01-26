@@ -6,8 +6,8 @@
 (require pixie.io :as io)
 (require pixie.fs :as fs)
 (require pixie.test :as t)
-
-
+(require pixie.io.tty :as tty)
+(require pixie.string :as s)
 
 (def *all-commands* (atom {}))
 (def unknown-command (atom true))
@@ -167,6 +167,22 @@
   (if cmd
     (help-cmd cmd)
     (help-all)))
+
+(defcmd ^:no-project init
+  "Initialize new Pixie project"
+ [ & args]
+   (if (empty? args)
+    (help-cmd "init")
+    (let [project-name (first args) config-default (first (rest args)) entry (atom "core.pxi") version (atom "0.0.1") description (atom "A Pixie project") repo (atom "")]
+      (println (str "Initializing " project-name "..."))
+
+      (d/mkdir (str project-name "/src/" project-name))
+      ;(println config-default)
+      (io/spit (str project-name "/src/" project-name "/" @entry) (str "(ns " project-name "." (s/substring @entry 0 (s/index-of @entry "."))")"))
+      (io/spit (str project-name "/project.edn") (str "{:name " project-name " \n:version \"" @version "\" \n:description \"" @description "\" \n:dependencies [] \n:repo \"" @repo"\"}\n"))
+      (println "Initialization complete"))))
+
+
 
 (def *command* (first program-arguments))
 
