@@ -6,9 +6,9 @@ if [ -L "$base_path" ]; then
 fi
 base_path=`dirname $base_path`
 
-pixie_path=`which pixie-vm`
+pixie_path=`which pixie`
 if [ -z "$pixie_path" ]; then
-    echo "Error: 'pixie-vm' must be on your PATH"
+    echo "Error: 'pixie' must be on your PATH"
     exit 1
 fi
 
