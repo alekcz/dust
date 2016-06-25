@@ -177,10 +177,29 @@
       (println (str "Initializing " project-name "..."))
 
       (d/mkdir (str project-name "/src/" project-name))
+      (d/mkdir (str project-name "/test/" project-name "/test"))
       ;(println config-default)
       (io/spit (str project-name "/src/" project-name "/" @entry) (str "(ns " project-name "." (s/substring @entry 0 (s/index-of @entry "."))")"))
+      
+      (io/spit (str project-name "/test/" project-name "/test/test-" @entry)
+        (str "(ns " project-name ".test-" (s/substring @entry 0 (s/index-of @entry ".")) "
+        (:require [pixie.test :refer [deftest assert assert-throws?]]
+                  [" (s/substring @entry 0 (s/index-of @entry ".")) ":refer :all]))
+;;pixie doesnt have testing yet...
+(defn testing [text & body])
+
+(def is assert)
+(deftest test-name
+  (testing \"a function\"
+    (is (= true true))
+    (is (= true (not false)))
+    (is (= true (not (not true))))))"))
+
       (io/spit (str project-name "/project.edn") (str "{:name " project-name " \n:version \"" @version "\" \n:description \"" @description "\" \n:dependencies [] \n:repo \"" @repo"\"}\n"))
-      (println "Initialization complete"))))
+      
+
+      
+     (println "Initialization complete"))))
 
 
 
