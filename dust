@@ -8,8 +8,18 @@ base_path=`dirname $base_path`
 
 pixie_path=`which pixie`
 if [ -z "$pixie_path" ]; then
-    echo "Error: 'pixie' must be on your PATH"
-    exit 1
+    pixie_path=`which pixie-vm`
+    if [ -z "$pixie_path" ]; then
+        pixie_path=`which pxi`
+        if [ -z "$pixie_path" ]; then
+            echo "Error: 'pixie' must be on your PATH"
+            exit 1
+        #else
+        #    echo "Warning: Using 'pxi' on path is deprecated. 'pixie' is preferred."
+        fi    
+    #else
+    #    echo "Warning: Using 'pixie-vm' on path is deprecated. 'pixie' is preferred."
+    fi
 fi
 
 function set_load_path() {
@@ -22,7 +32,7 @@ function set_load_path() {
 if [ ! -f "project.edn" ] && [ -f "project.pxi" ]; then
 	echo "Warning: 'project.pxi' is deprecated, please use 'project.edn'."
 	echo "To start you can run the following command:"
-	echo "  pixie -l $base_path/src -e '(require dust.project :as p) (p/load-project!) (prn (dissoc @p/*project* :path))'"
+	echo "  $pixie_path     -l $base_path/src -e '(require dust.project :as p) (p/load-project!) (prn (dissoc @p/*project* :path))'"
 	echo
 fi
 
